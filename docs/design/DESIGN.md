@@ -1,12 +1,13 @@
 # Put It On The Block: Design Document
 
-Status: Draft 2, for discussion. No code yet.
+Status: Draft 3. All open decisions from Draft 2 resolved (D15 to D28). No code yet.
 Owner: Enrico Schaefer (private project, not Traverse work)
-Working name: "On The Block" (placeholder; naming is an open decision)
+Working name: "On The Block" (final name after trademark clearance, D27)
 
 Change log
 - Draft 1 (2026-11-07): initial issues, model, architecture, wireframes.
 - Draft 2 (2026-11-07): incorporated Enrico's decisions. Core object generalized from "commitment" to "Entry" with types, including Calls (predictions and claims). Binding option moved into v1 as a mutual election. One-to-one only. Mobile-first creation and sealing. Public accountability score with per-entry opt-in. Visibility controlled by the parties. Deletion setting chosen at intake. Typed entries are first-class.
+- Draft 3 (2026-11-07): resolved open decisions 1 to 13, recorded as D15 to D28.
 
 ---
 
@@ -108,7 +109,7 @@ No token, no NFT, no coin. The platform pays gas. Revenue is a low-cost app subs
 
 Calls ("Lions by 5") are a core fun use. If users attach stakes, gambling law and app store rules come into play.
 
-Proposed: stakes are free text only ("Loser buys dinner"). The platform never holds, transfers, or settles money or anything of value on an outcome. Legal review item (UNVERIFIED) on whether free-text stakes between members create any exposure.
+Decided (D20): stakes are free text only ("Loser buys dinner"). The platform never holds, transfers, or settles money or anything of value on an outcome. Legal review item (UNVERIFIED) on whether free-text stakes between members create any exposure.
 
 ### 2.11 New issue: public accountability scores
 
@@ -178,7 +179,7 @@ DRAFT ---> AWAITING CONSENT ---> CAPTURE ---> REVIEW ---> SEALING ---> SEALED --
 ```
 
 Rules:
-- Either party can abandon before SEALED.
+- Either party can abandon before SEALED. Unsealed drafts are deleted after 7 days (D24).
 - After ANCHORED, nothing is edited. Changes are new versions linked to the prior version's hash.
 - Outcomes that both parties agree on are final. A one-sided outcome shows as "Marked broken by Alex; Sam disputes." We do not adjudicate.
 - Status changes after anchoring are signed events, anchored in the next batch.
@@ -217,7 +218,7 @@ One party. Pick type, capture, review, seal. Choose visibility and whether it co
 
 ### 5.5 Remote entries
 
-Typed entries work remotely in v1: both parties co-edit from their own phones. Remote audio (in-app call recording) is an open decision.
+Typed entries work remotely in v1: both parties co-edit from their own phones. Remote audio (in-app call recording) is phase 2 (D23).
 
 ### 5.6 Amending
 
@@ -276,7 +277,7 @@ Access grants to a specific person require both parties. View-only, expiring, re
 | Database | Postgres | Relational data fits. |
 | File storage | S3-compatible | Ciphertext only. |
 | Transcription | On-device Whisper-class model; server fallback | Privacy first. |
-| Chain | Ethereum L2 (Base leading candidate) | Low cost, EVM tooling, public. |
+| Chain | Base (Ethereum L2), decided D25 | Low cost, EVM tooling, public. |
 | Signing keys | Passkeys / secure enclave | No seed phrases. |
 
 ### 6.2 What the server can and cannot see
@@ -590,7 +591,7 @@ Text wireframes for structure. A clickable visual prototype is the next step.
 
 ```
 +----------------------------------+
-| Alex R.          (ID verified)   |
+| Alex R.                          |
 | Member since 2026                |
 |----------------------------------|
 | Accountability  18 of 20 kept    |
@@ -644,26 +645,24 @@ Later: templates and clause libraries, attorney review option, on-chain escrow.
 | D14 | Creation and sealing on mobile. Website for viewing, verifying, profiles, and account. |
 | D15 | Binding entries use the same phone and email verification as all accounts. No government ID check. |
 | D16 | Binding entries: locked deletion is mandatory. |
+| D17 | No ID verification or ID badge in v1. Revisit if fake accounts or disputed signatures become a problem. |
+| D18 | Visibility conflicts: most private choice wins. Either party can lower visibility; raising it requires both. |
+| D19 | Disputed outcomes do not move the score; the profile shows a disputed count. |
+| D20 | Calls: free-text stakes only. The platform never holds, moves, or settles money or anything of value. |
+| D21 | Either party can export their copy of any entry; the other party is notified. |
+| D22 | In-person audio is recorded on the initiator's phone only. |
+| D23 | Remote audio sessions in phase 2. v1 has in-person audio and remote typed entries. |
+| D24 | Unsealed drafts are deleted automatically after 7 days. No party keeps a copy of an unsealed entry. |
+| D25 | Anchor chain: Base (Ethereum L2). Second-chain redundancy remains a phase 2 item. |
+| D26 | v1 launches in the U.S. only. |
+| D27 | Keep "On The Block" as the working name. Final name after trademark knockout searches on a shortlist. |
+| D28 | Move to a new dedicated private repo before coding. This profile repo holds the design doc until then. |
 
 ---
 
 ## 13. Open decisions
 
-Taken in this order, one at a time.
-
-1. (Decided: D15, D16.)
-2. Optional "ID verified" badge: offer it to members who want it, or skip ID checks entirely in v1.
-3. Visibility conflicts: more restrictive wins, and either party can lower but raising needs both (recommended).
-4. Disputed outcomes: excluded from score and shown as a disputed count (recommended), or another rule.
-5. Calls: free-text stakes only, no money handled (recommended).
-6. Export: can a party export their own copy of a non-binding entry without the other's approval (recommended yes, with notice).
-7. Capture device: record on one phone or both phones.
-8. Remote audio sessions: v1 or phase 2 (recommended phase 2; remote typed entries in v1).
-9. Abandoned drafts: delete after 7 days, or each party may keep a private copy.
-10. Chain: Base (recommended) or other.
-11. Launch geography: U.S. only (recommended).
-12. Product name.
-13. Repo: keep in this profile repo, or create a dedicated repo before coding (recommended dedicated).
+None. Draft 2 decisions 1 to 13 are resolved as D15 to D28 above. New questions will be added here as they come up.
 
 ---
 
