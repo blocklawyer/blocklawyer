@@ -1,116 +1,126 @@
 # Put It On The Block: Design Document
 
-Status: Draft 1, for discussion. No code yet.
+Status: Draft 2, for discussion. No code yet.
 Owner: Enrico Schaefer (private project, not Traverse work)
 Working name: "On The Block" (placeholder; naming is an open decision)
+
+Change log
+- Draft 1 (2026-11-07): initial issues, model, architecture, wireframes.
+- Draft 2 (2026-11-07): incorporated Enrico's decisions. Core object generalized from "commitment" to "Entry" with types, including Calls (predictions and claims). Binding option moved into v1 as a mutual election. One-to-one only. Mobile-first creation and sealing. Public accountability score with per-entry opt-in. Visibility controlled by the parties. Deletion setting chosen at intake. Typed entries are first-class.
 
 ---
 
 ## 1. What we are building
 
-A mobile app and matching website where members record commitments and anchor proof of them on a public blockchain. A commitment is either personal (just me) or shared (me and one or more other members). The audio and AI transcript live off-chain, encrypted. The chain holds only a fingerprint (hash) and a timestamp, which lets anyone later prove the record existed at that moment and has not been altered.
+People say things that matter and then forget them, misremember them, or dispute them. Contracts go in a drawer or on a file server. Promises between spouses and friends depend on memory. Friendly arguments ("I'm telling you, the Lions win by 5") disappear once spoken.
 
-The origin case: two spouses disagree about what was said and agreed. One asks, "Are you willing to put that on the blockchain?" Both say yes, the app records the exchange, both approve the transcript, both seal it, and it is anchored. Months later either of them can pull it up and verify it.
+On The Block lets two members, or one member alone, memorialize what was said or agreed and anchor proof of it on a public blockchain. The record is consented, reviewed by every party, sealed with each party's signature, and verifiable later by anyone the parties allow. That adds a level of certainty and accountability that ordinary conversation does not have.
 
-v1 is a consumer product with a light social layer. The architecture should leave a clean path to a later "contracts mode" where authorized parties create and amend legally binding obligations.
+The content (audio, transcript, or typed text) lives off-chain, encrypted. The chain holds only a fingerprint (salted hash) and a timestamp.
+
+The product launches as a consumer app with a social layer. It is built to evidentiary standards from day one because people will use it in disputes. Parties can mutually elect to make an entry legally binding.
+
+The platform is built for flexibility. Entries have types, and the type list will grow or shrink based on what users actually do. We measure use by type (metadata only, not content) and pivot marketing toward what takes off.
 
 ### Design principles
 
-1. No unconsented content, ever. Every party to a shared commitment is a verified member who affirmatively consents at each stage. There is no upload of outside recordings in v1.
-2. Nothing personal goes on-chain. The chain sees hashes and timestamps only. Not names, not wallet addresses that link two people, not content.
-3. Parties control their record. Access to a shared commitment is decided by its parties, not by the platform and not by one party alone.
-4. Verifiable without us. A user should be able to prove a commitment is authentic even if the company is gone.
-5. Fun first, but built like it will end up in a courtroom. Because some of these will.
+1. Member to member, with consent at every step. Every party is a member who consents on their own device. No outside recordings, no non-members.
+2. Nothing personal goes on-chain. Hashes and timestamps only.
+3. The parties control the record: who sees it, whether it is public, whether it counts toward a public score, whether either can delete it, and whether it is binding.
+4. Verifiable without us. Proofs work even if the company is gone.
+5. Fun first, built to evidence standards.
 
 ---
 
-## 2. Issues to resolve before we build
+## 2. Issues and how we resolved them
 
-These are ordered by how much they change the architecture.
+### 2.1 Immutability vs. deletion and privacy law (decided)
 
-### 2.1 Immutability vs. deletion and privacy law
+Only a salted hash goes on-chain. Content and keys are off-chain. Deleting content and destroying keys ("crypto-shredding") leaves an on-chain hash that points to nothing. The salt prevents someone from guessing a short entry and confirming it against the chain.
 
-Blockchain records are permanent. Privacy laws (GDPR, CCPA/CPRA, state privacy statutes) give users deletion rights, and people will want to erase things after a breakup.
+Deletion setting is chosen at intake, per entry:
+- Default: each party can delete their own copy at any time. The other party keeps theirs.
+- Option: "Neither of us can delete without the other." Deletion of either copy requires both parties.
+- Full destruction of the content happens when all parties delete, or when the last remaining party deletes.
 
-Resolution in this design: only a salted hash goes on-chain. The content key and the files are off-chain. Deleting the off-chain content and destroying the encryption keys ("crypto-shredding") leaves an on-chain hash that points to nothing and cannot be reversed into content. The salt matters: without it, a short transcript ("I agree to do the dishes") could be guessed and hashed to confirm a match.
+For binding entries the default may need to be the locked option, so neither party can destroy the record of a contract unilaterally. See open decisions.
 
-Open question: in a shared commitment, can one party delete their copy without deleting the other party's copy? Proposed default: yes. Each party holds their own wrapped key. Party A can destroy their access; Party B keeps theirs. Full destruction of the content requires all parties, or happens when the last party deletes.
+Privacy law still gives a user deletion rights over their own personal data. A locked setting has to be reconciled with that. Legal review item.
 
-### 2.2 Recording consent laws
+### 2.2 Recording consent laws (decided)
 
-Several states require all parties to consent to a recording of a private conversation (California, Florida, Illinois, Maryland, Massachusetts, Montana, New Hampshire, Pennsylvania, Washington, and others; Michigan is debated). List UNVERIFIED; confirm against statutory text before launch.
+This is not a tool for recording conversations. It records a deliberate entry between members who have each consented in-app. Recording starts only after every party taps consent on their own device. A spoken notice opens the recording, and each party's verbal yes is captured. Terms of service cover the remaining obligations, including bystanders. Transcript review allows removal of a segment before sealing.
 
-Resolution in this design: a recording can only start after every party has tapped "I consent to recording" on their own device inside a live session (Section 5.2). The consent events are logged, signed, and hashed into the record itself. The recording opens with an auto-generated spoken notice ("This conversation is being recorded for On The Block by...") and each party's verbal yes is captured on audio.
+State all-party-consent statutes still go on the legal review list (UNVERIFIED).
 
-Residual risk: bystanders. A child or friend talking in the background has not consented. Mitigation: in-app notice, terms of use, and a "remove segment" option during transcript review before sealing.
+### 2.3 Binding entries (decided: mutual election)
 
-### 2.3 Is a commitment a contract?
+Every entry is non-binding by default. At intake, the parties can elect "Make this binding." Both must elect it. If either declines, the entry is non-binding.
 
-v1 says "fun, not legal." Courts may not care what we called it. A signed, timestamped, mutually approved record of a promise looks a lot like a contract. Agreements between spouses also raise their own rules (postnuptial agreements often require writing, financial disclosure, and independent counsel; agreements in contemplation of divorce or on custody may be unenforceable or void as against public policy). All UNVERIFIED and state-specific.
+A binding entry adds:
+- Identity verification for both parties (see open decisions for the level).
+- Electronic signature consent and intent-to-sign language at sealing. ESIGN Act and UETA requirements (UNVERIFIED; confirm).
+- Optional governing law field.
+- Stronger record defaults: locked deletion, export available to each party.
+- A warning screen for categories that often carry formal requirements or limits: real estate, wills and estates, marital property and postnuptial terms, custody and support, and employment. A warning, not a block. Whether a given entry is enforceable is a question of state law we do not answer for the user.
 
-Decisions:
-- v1 terms state that commitments are not intended to create legal obligations, and each sealing screen repeats it in one line.
-- We do not market v1 as a contract tool.
-- The record should still be built to evidentiary standards (Section 2.4), because users will try to use it in disputes regardless.
-- Contracts mode (Section 11) is a separate, opt-in product with its own identity verification, e-signature compliance (ESIGN Act and UETA, UNVERIFIED), and templates.
+Non-binding entries carry the line "A personal record, not a legal contract" at sealing.
 
-### 2.4 Subpoenas and evidence
+Agreements between spouses raise state-specific rules on formalities, disclosure, and public policy (UNVERIFIED). Legal review item.
 
-The first divorce case involving the app will produce a subpoena to us. Design choice:
+### 2.4 Subpoenas and evidence (decided: end-to-end encryption)
 
-Option A, platform can decrypt. Easier key recovery, easier support, and we can produce content when compelled.
-Option B, end-to-end encrypted. We hold only ciphertext and metadata. We cannot produce content; the parties have it and can be compelled themselves.
+Content is end-to-end encrypted. We hold ciphertext and metadata only. When compelled, we can produce metadata (who, when, status, hashes) but not content. The parties hold the content and can be compelled themselves.
 
-Recommendation: Option B for content, with an optional user-controlled recovery method (Section 7.3). This keeps us out of the middle of family disputes and is a better privacy story. We still hold metadata (who, when, status), so a records-request policy is needed either way.
+Evidence package: device signatures from each party, a signed consent log, hashes of audio and transcript, an on-chain timestamp, and a published, open-source verifier. We publish a plain-English page on authenticating an On The Block record. We also need a records-request policy.
 
-Authentication: to be useful as evidence, a record needs a chain of custody. Our design gives that: device signatures from each party, a signed consent log, hashes of audio and transcript, and an on-chain timestamp. We should publish a plain-English "How to authenticate an On The Block record" page and an open-source verifier.
+### 2.5 Pressure inside relationships (decided)
 
-### 2.5 Coercion and abuse
-
-An app that lets one person pressure another into a recorded "commitment" can be a tool of control in an abusive relationship.
-
-Mitigations:
-- Either party can decline at any stage before sealing with no explanation and no notification text that shames ("Your request was not accepted").
-- Rate limits on requests to the same person.
+The concern is one person pressuring another into an entry. Mitigations:
+- Either party can decline at any stage before sealing. The notice is neutral ("Not accepted").
+- Rate limits on repeat requests to the same person.
 - Block, mute, and report on every connection.
-- No public scores of other people without their consent (Section 8).
-- A private "I was pressured" flag on a sealed commitment, visible only to the flagging party and to our trust-and-safety team, which can be used later to attach context.
+- Each person decides, per entry, whether it counts toward their public score.
+- A private "I was pressured" flag, visible to the flagging party and trust and safety.
 - Safety resources link in settings.
+- Terms of service address it.
 
-### 2.6 AI transcript accuracy
+### 2.6 AI transcript accuracy (decided)
 
-The transcript is a machine product. It will get words wrong, and one wrong word can flip a promise.
+Audio is the canonical record. Transcription runs on the phone, with a server fallback that decrypts in memory for the job only and keeps nothing. Each party reviews, edits, and accepts the transcript. Edits must be accepted by both. Both audio and final transcript are hashed.
 
-Resolution: the audio is the canonical record. The transcript is a convenience. Every party reviews the transcript before sealing and can propose corrections; corrections must be accepted by all parties. Both audio and final transcript are hashed. The UI labels the transcript "AI transcript, approved by all parties on [date]."
+### 2.7 Identity (decided)
 
-### 2.7 Identity
+Proof of who comes from account verification, device-bound signing keys (passkeys / secure enclave), and the voice on the audio. Optional "ID verified" badge for non-binding use; required for binding entries.
 
-The on-chain proof shows that some content existed at a time. It does not prove who said it. Identity comes from:
-- Account verification (phone at minimum; government ID optional in v1, required in contracts mode).
-- Device-bound signing keys (passkeys / secure enclave) used to sign each consent and seal event.
-- Voice on the audio itself.
+### 2.8 Crypto exposure and business model (decided)
 
-Open question: do we require ID verification for shared commitments in v1? Proposed: no for v1, with a visible "ID verified" badge for members who opt in.
+No token, no NFT, no coin. The platform pays gas. Revenue is a low-cost app subscription priced to be profitable after gas, storage, transcription fallback, and app store fees. Users never see a wallet or seed phrase.
 
-### 2.8 Crypto exposure and app store rules
+### 2.9 Scope limits (decided)
 
-Users should never need a wallet, a seed phrase, or a token.
+- 18+ only.
+- One-to-one entries, or entries with yourself. No groups in v1.
+- Estate access through a documented process. Surviving party keeps access.
+- Content moderation works on reports. Reporters share their own decrypted copy if they choose.
 
-Decisions:
-- No token, no NFT, no coin. This avoids securities, money transmission, and app store issues around crypto sales.
-- The platform pays gas. Users pay in dollars (subscription or per-anchor) through normal app store billing.
-- Each user gets an embedded signing key created on sign-up. It never holds funds.
+### 2.10 New issue: Calls and wagers
 
-### 2.9 Other issues to track
+Calls ("Lions by 5") are a core fun use. If users attach stakes, gambling law and app store rules come into play.
 
-- Minors: 18+ only. Age gate at sign-up.
-- Death and incapacity: what happens to a shared record when one party dies. Proposed: surviving party retains access; estate access through a documented process.
-- Group commitments (3+ parties): consent and amendments require unanimity by default. Large groups are a later feature.
-- Content moderation: we cannot see E2EE content. Reports must include the reporter's own decrypted copy, which they choose to share.
-- Defamation and harassment through ratings (Section 8).
+Proposed: stakes are free text only ("Loser buys dinner"). The platform never holds, transfers, or settles money or anything of value on an outcome. Legal review item (UNVERIFIED) on whether free-text stakes between members create any exposure.
+
+### 2.11 New issue: public accountability scores
+
+A public score is the feature that creates accountability. It is also where harm can come from: a counterparty tanking someone's score, or a score being gamed.
+
+Design (Section 8.2): a person's public score uses only entries that person opted in. Disputed outcomes are shown as disputed and do not move the score. Scores show their basis (number of entries counted). Legal review item on defamation exposure for ratings, though the opt-in design reduces it.
+
+### 2.12 Other items to track
+
 - Data residency if we launch outside the U.S.
-- Recording in a car or public place with poor audio.
-- Accessibility: a typed commitment path for members who cannot or will not record audio.
+- Poor audio environments.
+- Accessibility: typed entries are first-class, so anyone can use the product without audio.
 
 ---
 
@@ -118,290 +128,248 @@ Decisions:
 
 | Concept | What it is |
 |---|---|
-| Member | A verified user account. Has a profile, a device signing key, and an encryption key pair. |
-| Connection | A mutual relationship between two members (both accept). Required before a shared commitment. |
-| Circle | An optional named group of connections ("Family," "Running club"). Used for sharing and group commitments. |
-| Commitment | The core record. Personal (one party) or shared (two or more parties). Has versions. |
-| Party | A member's role on a commitment. Each party has independent consent, access, and rating rights. |
-| Session | The live window in which parties join, consent, and record. |
-| Recording | Encrypted audio file. Canonical record. |
-| Transcript | Encrypted AI transcript, edited and approved by all parties. |
-| Consent Event | A signed, timestamped record of a party's yes or no at each stage. |
-| Version | A sealed state of a commitment. An amendment creates a new version linked to the prior one. |
-| Seal | The moment all parties sign the final version. Triggers anchoring. |
-| Anchor | The on-chain proof: the version's hash included in a Merkle batch whose root is written to the chain. |
-| Access Grant | Permission for a non-party (e.g., a mediator, counselor, or friend) to view a commitment. Requires consent of all parties. |
-| Check-in | A periodic or ad hoc report by a party on whether a commitment is holding up. |
-| Rating | A party's score of how a commitment was kept. Private to the parties by default. |
+| Member | A verified user account. Profile, device signing key, encryption key pair. |
+| Connection | A mutual relationship between two members. Required before a shared entry. |
+| Entry | The core record. Has a type, one or two parties, settings, and versions. |
+| Entry type | Promise, Agreement, Call, Statement, or Personal Goal. Types drive templates, outcome options, and wording. The list is data, not code, so we can add or retire types. |
+| Party | A member's role on an entry. Each party has their own consent, settings, access, and rating. |
+| Entry settings | Chosen at intake: binding (mutual), visibility (Section 8.1), counts toward my score (per party), deletion rule, check-in schedule. |
+| Session | The live window where parties join, consent, and record or type. |
+| Recording | Encrypted audio. Canonical when present. |
+| Text | Encrypted transcript or typed text, approved by all parties. |
+| Consent event | Signed, timestamped yes or no at each stage. |
+| Version | A sealed state of an entry. An amendment is a new version linked to the prior one. |
+| Seal | All parties sign the version hash on their phones. Triggers anchoring. |
+| Anchor | The version hash included in a Merkle batch; the root is written on-chain. |
+| Outcome | How an entry turned out: kept or broken (Promise, Agreement, Goal), right or wrong or push (Call), none (Statement). |
+| Access grant | Permission for a non-party to view. Requires both parties. |
+| Check-in | A periodic report on how an entry is holding up. |
+| Rating | A party's assessment of how the other party kept an entry. |
+| Accountability score | A member's public score, built only from entries they opted in. |
+
+### 3.1 Entry types (v1)
+
+| Type | Example | Parties | Outcome |
+|---|---|---|---|
+| Promise | "I'll handle the holidays this year." | 1 or 2 | Kept / broken |
+| Agreement | "Your parents get Thanksgiving, mine get Christmas." | 2 | Kept / broken, per party |
+| Call | "Lions win by 5." "The restaurant was on Elm Street." | 1 or 2 | Right / wrong / push |
+| Statement | "Here's what we decided about the car." | 1 or 2 | None; it is a memorialized record |
+| Personal Goal | "Gym three times a week through March." | 1 | Kept / broken |
+
+Calls between two people can be opposed ("I say Lions by 5; Sam says Bears") or a single claim the other party witnesses.
 
 ---
 
-## 4. Commitment lifecycle
+## 4. Entry lifecycle
 
 ```
-            +-----------+
-            |   DRAFT   |  initiator writes a title, picks parties, sets options
-            +-----+-----+
-                  | invite sent
-            +-----v-----------+
-            | AWAITING CONSENT|  each party accepts or declines the invite
-            +-----+-----------+
-                  | all parties joined the live session and consented
-            +-----v-----+
-            | RECORDING |  audio captured; verbal notice and verbal yes recorded
-            +-----+-----+
-                  | stop
-            +-----v------------+
-            | TRANSCRIPT REVIEW|  AI transcript generated; parties propose and accept edits
-            +-----+------------+
-                  | all parties approve
-            +-----v-----+
-            |  SEALING  |  each party signs the version hash on their device
-            +-----+-----+
-                  | all signatures collected
-            +-----v-----+
-            |  SEALED   |  queued for anchoring
-            +-----+-----+
-                  | included in an on-chain batch
-            +-----v-----+
-            | ANCHORED  |  verifiable; check-ins and ratings open
-            +-----+-----+
-                  |
-     +------------+-------------+-----------------+----------------+
-     |            |             |                 |                |
- AMENDED      FULFILLED      RELEASED          BROKEN           EXPIRED
- (new version  (all parties   (all parties      (one party       (end date
-  goes through  mark done)     agree to end)     marks broken;    passed)
-  the same flow)                                 the other may
-                                                 dispute)
+DRAFT ---> AWAITING CONSENT ---> CAPTURE ---> REVIEW ---> SEALING ---> SEALED ---> ANCHORED
+            (other party          (record      (edit and     (both sign    (queued)    (on chain)
+             accepts invite        audio or     approve       on phone)
+             and settings)         type text)   text)
+                                                                                         |
+                       +--------------+-------------+---------------+-------------------+------------+
+                       |              |             |               |                   |            |
+                    AMENDED       FULFILLED      RELEASED        BROKEN             RESOLVED      EXPIRED
+                    (new version  (both mark     (both agree     (one party marks;  (Calls:       (end date
+                     through the   kept)          to end)         other may          right/wrong/  passed)
+                     same flow)                                   dispute)           push)
 ```
 
 Rules:
-- Any party can abandon before SEALED. Abandoned drafts and recordings are deleted after 7 days unless a party saves their own copy (proposed; open decision).
-- After ANCHORED, nothing is ever edited. Every change is a new version that references the prior version's hash. The history is the point.
-- FULFILLED, RELEASED, and EXPIRED are mutual or automatic. BROKEN is unilateral, so it is shown as "Marked broken by Alex; Sam disputes" when contested. We do not adjudicate.
-- Status changes after anchoring are themselves signed events and are anchored in the next batch, so the full history is provable.
+- Either party can abandon before SEALED.
+- After ANCHORED, nothing is edited. Changes are new versions linked to the prior version's hash.
+- Outcomes that both parties agree on are final. A one-sided outcome shows as "Marked broken by Alex; Sam disputes." We do not adjudicate.
+- Status changes after anchoring are signed events, anchored in the next batch.
+- Settings agreed at intake are part of the sealed version. Changing them (for example, making an entry public later) is a mutual, signed event.
 
-Personal commitments follow the same flow with one party and no consent handshake.
+Personal entries follow the same flow with one party.
 
 ---
 
 ## 5. Key flows
 
-### 5.1 Connecting with another member
+Creation and sealing happen in the mobile app only. The website is for viewing, verifying, profiles, connections, public entry pages, account, export, and the standalone verifier.
 
-1. Find by username, phone contact match (opt-in, hashed contact discovery), or QR code in person.
-2. Send connection request. The other member accepts or ignores.
-3. Connected members see each other's profile per the profile's visibility settings (Section 8.1).
+### 5.1 Connecting
 
-A connection is required before a shared commitment. This keeps strangers from sending commitment requests.
+Find by username, opt-in hashed contact matching, or QR code in person. Send a request; the other member accepts or ignores. Connection is required before a shared entry.
 
-### 5.2 Creating a shared commitment (in person, the origin case)
+### 5.2 Creating a shared entry in person (origin case)
 
-1. Initiator taps "Put it on the block," picks the other party, adds an optional title ("Who handles the holidays this year").
-2. App opens a live session and shows a QR code and a push to the other party.
-3. Other party opens the session on their own phone. Both see the same screen: "Alex wants to record a commitment with you."
-4. Each taps "I consent to recording." Both consents are signed on device.
-5. Recording starts on the initiator's phone (or on both phones, for redundancy; open decision). App plays a short spoken notice.
-6. Parties talk. A prompt on screen suggests closing with each person saying "I agree."
-7. Stop. Audio uploads encrypted. Transcript is generated.
-8. Each party reviews the transcript on their own phone, can propose edits or remove a segment (e.g., a bystander), and approves.
-9. App shows the seal screen: title, transcript, duration, parties, the line "This is a personal record, not a legal contract," and a "Seal it" button. Each party seals with a biometric prompt.
-10. Done. Status shows "Sealed, anchoring." A few minutes later: "On the block," with a link to the proof.
+1. Initiator taps "Put it on the block," picks the type, picks the other party, adds a title.
+2. Initiator proposes settings: binding or not, visibility, deletion rule, check-ins. Initiator chooses whether it counts toward their own score.
+3. Other party joins the session on their own phone (QR or push), reviews proposed settings, accepts or counters, and chooses whether it counts toward their own score.
+4. Both consent to capture.
+5. Capture: record audio (spoken notice plays first, prompt to close with "I agree") or co-type the text.
+6. Review: transcript generated on device; each party edits, can remove a segment, and approves. Edits require both.
+7. Seal: summary of entry, settings, and the binding or non-binding line. Each party seals with biometrics. Binding entries add the e-signature consent and intent language.
+8. "Sealed, anchoring," then "On the block" with a proof link.
 
-### 5.3 Creating a shared commitment (remote)
+### 5.3 Making a Call
 
-Same flow, but the session runs an in-app audio call (WebRTC). The call is recorded server-side into an encrypted file, or recorded on each device and merged. This is a phase 2 feature; v1 supports in-person and remote typed commitments only.
+Same flow, lighter. Type "Call," state the claim (and the other party's counter-claim if opposed), optional free-text stakes, optional resolution date. At resolution, both parties mark the outcome. Disagreement shows as disputed.
 
-### 5.4 Typed commitment (no audio)
+### 5.4 Personal entry
 
-For people who do not want audio. Parties co-edit text, approve, and seal. Same consent and seal rules.
+One party. Pick type, capture, review, seal. Choose visibility and whether it counts toward your score.
 
-### 5.5 Amending
+### 5.5 Remote entries
 
-Any party proposes an amendment from the commitment detail screen, by recording a new session or editing text. The amendment goes through consent, review, and seal. The new version links to the old. Both versions remain viewable with a diff view.
+Typed entries work remotely in v1: both parties co-edit from their own phones. Remote audio (in-app call recording) is an open decision.
 
-### 5.6 Checking the record ("check the block")
+### 5.6 Amending
 
-From the commitment detail screen, "Verify" does the following, on the device:
-1. Download and decrypt the audio and transcript.
-2. Recompute their hashes and the version hash.
-3. Fetch the Merkle proof and the on-chain transaction.
-4. Confirm the proof leads to the root recorded on-chain at the stated block time.
-5. Show "Verified: unchanged since [date, time], block [number]."
+Either party proposes an amendment. It goes through consent, capture, review, and seal. Diff view shows changes.
 
-The website offers the same check as a standalone verifier: drop in an exported record bundle and it checks against the chain without needing our servers.
+### 5.7 Checking the record
 
-### 5.7 Sharing with someone outside the commitment
+"Verify" decrypts on device, recomputes hashes, fetches the Merkle proof and on-chain transaction, and shows "Verified: unchanged since [date, time], block [number]." The website verifier does the same with an exported proof bundle, without our servers.
 
-A party requests a grant for a specific person (a member, or a non-member via a time-limited link). All other parties must approve. Grants can be view-only, expiring, and revoked. Every view is logged and visible to the parties.
+### 5.8 Sharing outside the entry
 
-Open question: should a party be able to export their own copy without the other party's approval? Practically, they can always screen-record or retell it. Proposed: yes, a party can export their own record bundle, and the other party is notified. Blocking export would give false comfort.
+Access grants to a specific person require both parties. View-only, expiring, revocable. Every view logged and visible to the parties.
 
 ---
 
 ## 6. System architecture
 
 ```
-  +----------------+       +----------------+
-  |  Mobile app    |       |   Website      |
-  |  (iOS/Android) |       |  (web app +    |
-  |                |       |   verifier)    |
-  +-------+--------+       +--------+-------+
-          |   device keys, E2E encryption,   |
-          |   signing happen on the client   |
+  +----------------+       +------------------+
+  |  Mobile app    |       |   Website        |
+  |  create, seal, |       |  view, verify,   |
+  |  record, sign  |       |  profiles, public|
+  +-------+--------+       |  pages, account  |
+          |                +--------+---------+
+          |  device keys, E2E encryption, on-device transcription
           +----------------+-----------------+
                            |
                     HTTPS / WebSocket
                            |
   +------------------------v--------------------------+
   |                    API layer                      |
-  |  auth, members, connections, commitments,         |
-  |  sessions, consent log, grants, notifications     |
+  |  auth, members, connections, entries, sessions,   |
+  |  consent log, grants, outcomes, scores, notify    |
   +---+-----------+------------+------------+---------+
       |           |            |            |
 +-----v----+ +----v-----+ +----v-------+ +--v-------------+
 | Postgres | | Object   | | Transcribe | | Anchoring      |
-| metadata | | storage  | | worker     | | service        |
-| (no      | | encrypted| | (ephemeral | | batch -> Merkle|
-| content) | | blobs    | |  decrypt,  | | root -> chain  |
-+----------+ +----------+ |  no retain)| +--+-------------+
-                          +------------+    |
-                                      +-----v----------+
-                                      | L2 blockchain  |
-                                      | Anchor registry|
-                                      | contract       |
-                                      +----------------+
+| metadata | | storage  | | fallback   | | service        |
+| (no      | | encrypted| | (ephemeral,| | batch -> Merkle|
+| content) | | blobs    | |  no retain)| | root -> chain  |
++----------+ +----------+ +------------+ +--+-------------+
+                                            |
+                                     +------v---------+
+                                     | L2 blockchain  |
+                                     | Anchor registry|
+                                     +----------------+
 ```
 
 ### 6.1 Proposed stack
 
 | Layer | Proposal | Why |
 |---|---|---|
-| Mobile | React Native (Expo) | One codebase for iOS and Android; shares TypeScript with web. |
-| Web | Next.js | Same language and components; verifier page can be fully static. |
+| Mobile | React Native (Expo) | One codebase for iOS and Android; TypeScript shared with web. |
+| Web | Next.js | Same language and components; verifier can be fully static. |
 | API | TypeScript (Node) | Same language end to end. |
-| Database | Postgres | Relational data (members, connections, parties, versions) fits it. |
-| File storage | S3-compatible object storage | Holds only ciphertext. |
-| Transcription | Whisper-class model, self-hosted or a vendor with zero-retention terms | See 6.3. |
-| Chain | Ethereum L2 (Base is the leading candidate) | Low cost, EVM tooling, public and credible. |
-| Signing keys | Passkeys / secure enclave, via an embedded-wallet provider or our own | No seed phrases. |
-
-All of this is open for discussion. The architectural choices that matter most are E2E encryption, off-chain content, and batch anchoring. The specific frameworks are replaceable.
+| Database | Postgres | Relational data fits. |
+| File storage | S3-compatible | Ciphertext only. |
+| Transcription | On-device Whisper-class model; server fallback | Privacy first. |
+| Chain | Ethereum L2 (Base leading candidate) | Low cost, EVM tooling, public. |
+| Signing keys | Passkeys / secure enclave | No seed phrases. |
 
 ### 6.2 What the server can and cannot see
 
-The server sees: account info, connections, which members are parties to which commitment, timestamps, status, file sizes, hashes.
-The server cannot see: audio, transcript text, titles (encrypted), amendment content.
+Sees: accounts, connections, who is party to which entry, entry type, settings, timestamps, status, outcomes, scores, hashes.
+Cannot see: audio, text, titles, amendment content.
 
-Titles are encrypted too, so a commitment list leaks nothing sensitive if our database is breached.
+Entry type and outcome are metadata on purpose. They power scores and the usage analytics we need to decide where to take the product, without exposing content.
 
-### 6.3 The transcription problem
+### 6.3 Flexibility for pivots
 
-E2E encryption and server-side AI transcription conflict: the transcription service has to hear the audio.
-
-Options:
-- A. On-device transcription. Fully private. Quality and speed depend on the phone. Improving fast.
-- B. Ephemeral server transcription. Client sends the content key for that job only. A worker decrypts in memory, transcribes, encrypts the result to the parties, and discards everything. Strong but not "zero knowledge."
-- C. Third-party API with zero-retention contract. Simplest. Weakest privacy story.
-
-Recommendation: A where the device supports it, B as fallback, disclosed plainly in the privacy policy. Avoid C for content.
+- Entry types, their outcome options, templates, and wording are configuration, not hard-coded screens.
+- Feature flags for social features (feed, public pages, leaderboards) so we can test them by cohort.
+- Usage analytics by type, settings chosen, and outcome, never by content.
 
 ---
 
 ## 7. Encryption and keys
 
-### 7.1 Per-commitment content keys
+### 7.1 Per-entry content keys
 
-1. Each version gets a random content key.
-2. Audio and transcript are encrypted with it on the device.
-3. The content key is wrapped (encrypted) separately for each party's public key and stored with the version.
-4. To grant access to someone new, an existing party's device unwraps the key and re-wraps it for the grantee, only after all parties approve.
-5. To revoke, we delete the grantee's wrapped key. (They may have kept a copy while they had access. The UI says so.)
-6. Crypto-shredding = deleting all wrapped keys and the ciphertext.
+Each version gets a random content key. Content is encrypted on device. The key is wrapped separately for each party. Access grants re-wrap for the grantee after both parties approve. Revocation deletes the grantee's wrapped key. Deletion follows the entry's deletion rule (Section 2.1); full crypto-shredding deletes all wrapped keys and the ciphertext.
 
 ### 7.2 Member keys
 
-Each member has:
-- A signing key (for consents, seals, status changes). Device-bound passkey where possible.
-- An encryption key pair (for receiving wrapped content keys).
-- Multi-device support by enrolling new devices from an existing device.
+Signing key (device-bound), encryption key pair, multi-device enrollment from an existing device.
 
 ### 7.3 Recovery
 
-E2E encryption means a member who loses every device loses access. That will happen, and the support calls will be painful.
-
-Options, user-selectable:
-- Recovery through another of their own devices (default).
-- Recovery code written down at setup.
-- Social recovery: a trusted connection holds a recovery share.
-- Platform-escrowed recovery (opt-in, clearly labeled as weakening privacy).
-
-Note the backstop: in a shared commitment, the other party still has the record and can re-grant access.
+Options: another of the member's devices (default), recovery code, trusted connection holding a recovery share, or opt-in platform escrow labeled as weaker privacy. In a shared entry, the other party can re-grant access.
 
 ---
 
-## 8. Social layer
+## 8. Social layer and accountability
 
-The goal is a fun app people open more than once a month. The risk is turning a marriage into a public scoreboard.
+The user controls exposure. Default is private between the parties. Public is a choice, the way some payment apps let users choose whether a transaction shows on a public feed.
 
-### 8.1 Profiles
+### 8.1 Visibility of an entry
 
-- Display name, photo, short bio, member since, ID-verified badge.
-- Optional public stats: number of commitments sealed, self-reported "kept" rate. Off by default.
-- Profile visibility: public, connections only, or private.
+| Level | Who sees it |
+|---|---|
+| Private (default) | The parties only. |
+| Connections | Parties plus their connections. |
+| Public | Anyone, including a public web page and share card. |
 
-### 8.2 Ratings and check-ins
+For a shared entry, the more restrictive choice wins. Either party can lower visibility later; raising it requires both.
 
-- Each party can rate how a commitment held up (1 to 5, plus optional note) at any check-in or at close.
-- Ratings are visible only to the parties to that commitment. Never public by default.
-- A member's own aggregate ("You kept 18 of 20") is private to them unless they choose to show it.
-- No member can publish a rating about another member. This removes most of the defamation and harassment risk.
-- Check-in reminders on a schedule the parties set ("Remind us monthly").
+### 8.2 Accountability score
 
-### 8.3 Optional public sharing
+- Each member has a public accountability score. Only entries they opted in count. The opt-in is per entry, per party, chosen at intake, and is independent of visibility. A private entry can still count toward the score; the score shows only the aggregate.
+- Promise, Agreement, and Goal outcomes feed the accountability score: kept vs. broken.
+- Calls feed a separate "Call record": right, wrong, push.
+- For shared entries, an outcome counts only when both parties agree on it. Disputed outcomes are shown as a disputed count and do not move the score.
+- Personal Goals are self-reported. Shown as self-reported.
+- The score displays its basis ("Kept 18 of 20 counted entries").
+- Members can hide their score entirely.
 
-Parties can unanimously choose to share a commitment publicly (e.g., a public pledge, a friendly bet, a fitness goal with a friend). Public commitments get a share card and can be "witnessed" by connections. This is the growth and fun engine.
+### 8.3 Ratings
 
-### 8.4 Feed
+Each party can rate how the other kept a shared entry (1 to 5, optional note). Ratings are visible to the parties. A rating affects the public score only through the outcome on an entry the rated person opted in.
 
-A feed of: your pending actions, upcoming check-ins, public commitments from connections, and milestones ("Alex and Sam kept their commitment for 100 days"). Milestones about shared commitments post only with all parties' opt-in.
+### 8.4 Feed and fun
+
+Feed shows pending actions, upcoming check-ins and resolution dates, public entries from connections, and milestones ("Alex called it: Lions by 7"). Milestones for shared entries post only if both parties allow.
 
 ---
 
 ## 9. Smart contract and anchoring
 
-### 9.1 Why batch
+### 9.1 Batch anchoring
 
-Writing one transaction per commitment is expensive at scale and leaks activity patterns. Instead:
-
-1. Sealed versions queue up.
-2. Every N minutes (or when the queue hits a size limit), the anchoring service builds a Merkle tree of version hashes.
-3. One transaction writes the Merkle root to the chain.
-4. Each version stores its Merkle proof.
-
-Cost is one transaction per batch, regardless of how many commitments are in it.
+Sealed versions queue. Every N minutes the anchoring service builds a Merkle tree of version hashes and writes one root on-chain. Each version keeps its Merkle proof. One transaction per batch.
 
 ### 9.2 What gets hashed
 
 ```
 version_hash = H(
-  commitment_id_salted,
+  entry_id_salted,
   version_number,
   previous_version_hash,
-  H(audio_ciphertext or audio_plaintext),   -- open decision, see below
-  H(transcript_final),
+  entry_type,
+  settings,                  -- binding, visibility, deletion rule, score opt-ins
+  H(audio_plaintext),        -- if audio present
+  H(text_final),
   H(consent_log),
   party_signatures,
   salt
 )
 ```
 
-Open decision: hash the plaintext or the ciphertext? Plaintext hash proves content regardless of how it was encrypted, which is what a court cares about. It requires salting (done). Recommendation: hash plaintext with salt.
+Plaintext hashes with salt, so the proof is about the content, not the encryption.
 
 ### 9.3 Contract shape
-
-Minimal and boring on purpose:
 
 ```
 contract AnchorRegistry {
@@ -411,22 +379,19 @@ contract AnchorRegistry {
 }
 ```
 
-- No personal data, no addresses of members, no per-commitment entries.
-- Not upgradeable for the stored data. Roots once written are final.
-- The anchorer key is held by the anchoring service, in a hardware-backed key store, with a rotation process.
-- Open-source the contract and the verifier.
+No personal data, no member addresses, no per-entry state on-chain. Roots are final. Anchorer key in a hardware-backed store with rotation. Contract and verifier open-sourced.
 
-### 9.4 Why not put more logic on-chain
+### 9.4 Why logic stays off-chain
 
-Smart contracts with per-commitment state, party addresses, and status on-chain would make relationships between people public forever (anyone could see that wallet X and wallet Y share 40 commitments). For a fun, private app that is the wrong trade. Contracts mode may justify more on-chain logic later, for example escrowed obligations. That is a separate design.
+Per-entry on-chain state would publicly link people forever. Binding entries do not need on-chain logic to be enforceable; they need good evidence, which the anchor provides. On-chain logic (escrow, conditional obligations) can be a later, separate contract.
 
-### 9.5 Optional redundancy
+### 9.5 Redundancy (phase 2)
 
-Anchor the same root to a second chain or to a timestamping service periodically, so the proof survives if one chain falters. Low cost, high credibility. Phase 2.
+Periodically anchor the same roots to a second chain or timestamping service.
 
 ---
 
-## 10. Wireframes (v1 screen list)
+## 10. Wireframes (v1 mobile screens)
 
 Text wireframes for structure. A clickable visual prototype is the next step.
 
@@ -436,85 +401,100 @@ Text wireframes for structure. A clickable visual prototype is the next step.
 +----------------------------------+
 | On The Block            (bell) (o)|
 |----------------------------------|
+| Accountability 18/20   Calls 7-3 |
+|----------------------------------|
 | Needs you (2)                    |
 |  [Sam wants to seal "Holidays"]  |
-|  [Check-in due: "Gym 3x/week"]   |
+|  [Resolve: "Lions by 5" (Sun)]   |
 |----------------------------------|
-| Your commitments                 |
-|  Holidays plan      Sealed  Sam  |
-|  Gym 3x/week        Active  Me   |
-|  No phones at dinner Kept  Sam   |
+| Your entries                     |
+|  Holidays plan   Agreement  Sam  |
+|  Lions by 5      Call       Sam  |
+|  Gym 3x/week     Goal       Me   |
 |----------------------------------|
 | From your connections            |
-|  Jordan pledged: Marathon 2027   |
+|  Jordan called it: Rain on Sat   |
 |----------------------------------|
 |        [ + Put it on the block ] |
 | Home   Connections   Profile     |
 +----------------------------------+
 ```
 
-### 10.2 New commitment
+### 10.2 New entry: type
 
 ```
 +----------------------------------+
-| < New commitment                 |
+| < Put it on the block            |
 |----------------------------------|
-| What is it?                      |
-| [ Who handles the holidays     ] |
-|                                  |
-| Who's in?                        |
-|  (o) Just me                     |
-|  (*) Me and...  [ Sam      v ]   |
-|                                  |
-| How?                             |
-|  (*) Record it                   |
-|  ( ) Type it                     |
-|                                  |
-| Remind us to check in            |
-|  [ Monthly            v ]        |
+| What kind?                       |
+|  [ Promise   ]  I will...        |
+|  [ Agreement ]  We agree...      |
+|  [ Call      ]  I say...         |
+|  [ Statement ]  For the record...|
+|  [ Goal      ]  Just me          |
++----------------------------------+
+```
+
+### 10.3 New entry: details and settings
+
+```
++----------------------------------+
+| < Agreement                      |
+|----------------------------------|
+| Title [ Who handles holidays   ] |
+| With  [ Sam              v ]     |
+| How   (*) Record  ( ) Type       |
+|----------------------------------|
+| Settings (Sam will see these)    |
+| Visibility   [ Private     v ]   |
+| Binding      [ No          v ]   |
+| Deleting     [ Each can delete v]|
+| Check in     [ Monthly     v ]   |
+|----------------------------------|
+| [x] Count toward my score        |
 |                                  |
 |            [ Start session ]     |
 +----------------------------------+
 ```
 
-### 10.3 Live session (consent)
+### 10.4 Live session (other party joins)
 
 ```
 +----------------------------------+
-| Session with Sam                 |
+| Session with Alex                |
 |----------------------------------|
-|  Alex  ......... consented (ok)  |
-|  Sam   ......... waiting         |
+| Alex proposes:                   |
+|  Private . Not binding .         |
+|  Each can delete . Monthly       |
+|  [ Accept ]  [ Change ]          |
 |                                  |
-|  [ QR code for Sam to scan ]     |
+| [x] Count toward my score        |
 |                                  |
-| Recording starts when everyone   |
-| consents. Anyone can stop it.    |
+| Alex ..... consented (ok)        |
+| You  ..... [ I consent ]         |
 |                                  |
-|        [ Cancel session ]        |
+|        [ Decline ]               |
 +----------------------------------+
 ```
 
-### 10.4 Recording
+### 10.5 Recording
 
 ```
 +----------------------------------+
 | Recording   02:41       (stop)   |
 |----------------------------------|
 |   ~~~~~~~~ waveform ~~~~~~~~     |
-|                                  |
 | Tip: close with each of you      |
 | saying "I agree."                |
-|                                  |
 | Alex (ok)   Sam (ok)             |
 +----------------------------------+
 ```
 
-### 10.5 Transcript review
+### 10.6 Review
 
 ```
 +----------------------------------+
-| < Review transcript              |
+| < Review                         |
 |----------------------------------|
 | AI transcript. Audio is the      |
 | official record.                 |
@@ -524,134 +504,185 @@ Text wireframes for structure. A clickable visual prototype is the next step.
 | Sam:  Yes. My parents get        |
 |   Thanksgiving, yours get        |
 |   Christmas.             [edit]  |
-| Alex: I agree.                   |
-| Sam:  I agree.                   |
+| Alex: I agree.  Sam: I agree.    |
 |                                  |
 | Sam: approved   Alex: pending    |
-|                                  |
 | [ Remove a segment ] [Approve]   |
 +----------------------------------+
 ```
 
-### 10.6 Seal
+### 10.7 Seal (non-binding / binding)
 
 ```
-+----------------------------------+
-| Seal it                          |
-|----------------------------------|
-| Who handles the holidays         |
-| Alex and Sam, Nov 7, 2026, 2:41  |
-|                                  |
-| A personal record, not a legal   |
-| contract.                        |
-|                                  |
-| Once sealed, this version cannot |
-| be changed. You can amend it     |
-| later with Sam's agreement.      |
-|                                  |
-|      [ Seal with Face ID ]       |
-+----------------------------------+
++----------------------------------+   +----------------------------------+
+| Seal it                          |   | Seal it (binding)                |
+|----------------------------------|   |----------------------------------|
+| Who handles the holidays         |   | Sale of boat                     |
+| Alex and Sam, Nov 7, 2026        |   | Alex and Sam, ID verified        |
+| Private . Each can delete        |   | Locked deletion                  |
+|                                  |   |                                  |
+| A personal record, not a legal   |   | You both chose to make this      |
+| contract.                        |   | legally binding. By sealing you  |
+|                                  |   | sign it electronically.          |
+| Sealed versions cannot change.   |   | [ Review e-sign disclosure ]     |
+| Amend later with Sam.            |   |                                  |
+|   [ Seal with Face ID ]          |   |   [ Sign and seal ]              |
++----------------------------------+   +----------------------------------+
 ```
 
-### 10.7 Commitment detail
+### 10.8 Entry detail
 
 ```
 +----------------------------------+
 | < Who handles the holidays       |
 |----------------------------------|
-| On the block (ok)  v2  Sam & Me  |
-| Sealed Nov 7, 2026               |
-| [ Play ] [ Transcript ] [Verify] |
+| On the block (ok) v2  Agreement  |
+| Private . Not binding            |
+| [ Play ] [ Text ] [ Verify ]     |
 |----------------------------------|
-| History                          |
-|  v2  Amended Dec 1  (diff)       |
-|  v1  Sealed Nov 7                |
+| History  v2 Amended Dec 1 (diff) |
+|          v1 Sealed Nov 7         |
 |----------------------------------|
-| How's it holding up?             |
-|  You: 5/5   Sam: 4/5             |
-|  [ Check in ]                    |
+| Holding up?  You 5/5  Sam 4/5    |
+| [ Check in ]                     |
 |----------------------------------|
-| Access: Sam, Me                  |
-|  [ Share with someone ]          |
-|----------------------------------|
-| [ Amend ] [ Mark done ] [ ... ]  |
+| [ Amend ] [ Mark kept ] [ ... ]  |
 +----------------------------------+
 ```
 
-### 10.8 Verify
+### 10.9 Call detail
+
+```
++----------------------------------+
+| < Lions by 5                     |
+|----------------------------------|
+| Call . Sam vs. Alex . Public     |
+| Alex: Lions by 5                 |
+| Sam:  Bears win                  |
+| Stakes: loser buys dinner        |
+| Resolves: Sun, Nov 15            |
+|----------------------------------|
+| Who called it?                   |
+| [ Alex ] [ Sam ] [ Push ]        |
+| Alex says: Alex  Sam: pending    |
++----------------------------------+
+```
+
+### 10.10 Verify
 
 ```
 +----------------------------------+
 | < Verify                         |
 |----------------------------------|
 |  (ok) Audio matches              |
-|  (ok) Transcript matches         |
+|  (ok) Text matches               |
 |  (ok) Signed by Alex and Sam     |
 |  (ok) Anchored on Base           |
 |       Block 23,481,227           |
 |       Nov 7, 2026, 2:58 PM EST   |
-|                                  |
 |  Unchanged since it was sealed.  |
-|                                  |
 |  [ View transaction ]            |
 |  [ Export proof bundle ]         |
 +----------------------------------+
 ```
 
-### 10.9 Other screens
+### 10.11 Profile
 
-Connections list and requests; member profile (with visibility rules); circles; notifications; settings (devices, recovery, privacy, export, delete account, safety resources); web: landing page, sign-in, dashboard mirroring mobile, public commitment pages, standalone verifier.
+```
++----------------------------------+
+| Alex R.          (ID verified)   |
+| Member since 2026                |
+|----------------------------------|
+| Accountability  18 of 20 kept    |
+|   2 disputed, not counted        |
+| Call record     7-3-1            |
+|----------------------------------|
+| Public entries                   |
+|  Marathon 2027 (Goal)            |
+|  Lions by 5 (Call) - called it   |
+|----------------------------------|
+| [ Connect ]                      |
++----------------------------------+
+```
 
----
+### 10.12 Other screens
 
-## 11. Path to contracts mode (later)
-
-What has to be added, not rebuilt:
-- Strong identity (ID verification) for all parties.
-- E-signature compliance package: intent-to-sign language, consumer consent to electronic records, record retention, audit trail. ESIGN Act and UETA (UNVERIFIED; confirm requirements).
-- Templates and clause libraries, possibly attorney-drafted.
-- Optional counsel review and a role for a lawyer as a party or witness.
-- Jurisdiction and governing law selection.
-- Possibly on-chain logic for escrow or conditional obligations, as a separate contract.
-- Carve-outs: family law agreements, wills, real estate, and other categories with formal execution requirements.
-
-The v1 data model (versions, signed consent log, amendment chain, access grants) already supports this. The main additions are identity, compliance text, and templates.
-
----
-
-## 12. Open decisions for Enrico
-
-1. Product name.
-2. End-to-end encryption (recommended) or platform-decryptable.
-3. ID verification in v1: optional badge (recommended) or required for shared commitments.
-4. Record on one phone or both phones.
-5. Remote audio sessions in v1 or phase 2 (recommended phase 2).
-6. Abandoned recordings: delete after 7 days, or let each party keep a private copy.
-7. Can one party export their own copy without the other's approval (recommended yes, with notice).
-8. Can one party delete their copy without deleting the other's (recommended yes).
-9. Chain choice: Base (recommended) or other.
-10. Business model: subscription, per-anchor fee, or free tier with paid features.
-11. Launch geography: U.S. only at first (recommended), which also limits privacy and recording-law scope.
-12. Whether this repo (currently the GitHub profile repo) is the long-term home, or we create a dedicated repo before coding.
+Connections and requests; notifications; settings (devices, recovery, default visibility, default score opt-in, hide score, export, delete account, safety resources). Website: landing page, sign-in, dashboard, public entry pages, public profiles, standalone verifier.
 
 ---
 
-## 13. Proposed phases
+## 11. Binding entries: what v1 must include
 
-Phase 0 (now): design doc, open decisions, clickable wireframe prototype, legal review list.
-Phase 1 (MVP): accounts, connections, personal and shared in-person commitments (record and typed), transcript review, sealing, batch anchoring on a testnet then mainnet, verify screen, private ratings and check-ins, export.
-Phase 2: remote sessions, amendments with diff, public commitments and feed, circles, second-chain anchoring, web verifier as standalone static site.
-Phase 3: contracts mode.
+- ID verification for both parties.
+- E-signature consumer disclosure and intent-to-sign at sealing (ESIGN / UETA, UNVERIFIED).
+- Governing law field (optional).
+- Category warnings (real estate, wills and estates, marital property and postnuptial terms, custody and support, employment).
+- Locked deletion default.
+- Export of a complete record bundle by either party at any time.
+
+Later: templates and clause libraries, attorney review option, on-chain escrow.
 
 ---
 
-## 14. Legal review list (all UNVERIFIED until checked against primary sources)
+## 12. Decisions made (2026-11-07)
 
-- State all-party-consent recording statutes, and how they apply when both parties consent in-app.
-- Privacy laws: CCPA/CPRA, other state comprehensive privacy laws, and GDPR if any EU users; how crypto-shredding satisfies deletion rights.
-- Biometric privacy (Illinois BIPA and similar) if voice prints or face data are processed. Avoid voiceprint features in v1.
-- Enforceability of informal agreements between spouses and partners; when a "fun" record could be argued to be a contract.
-- ESIGN and UETA for contracts mode.
-- Money transmission and securities: confirm that platform-paid gas with no token avoids both.
+| # | Decision |
+|---|---|
+| D1 | Files off-chain, encrypted. Only salted hashes on-chain via batch Merkle roots. |
+| D2 | All parties are members; consent on their own device at every stage. No outside recordings. |
+| D3 | Deletion: default each party can delete their own copy; parties can choose locked at intake. Full destruction when all parties, or the last party, delete. |
+| D4 | Binding is a mutual election at intake. Both must agree. Default is non-binding. |
+| D5 | End-to-end encryption (Option B). |
+| D6 | Pressure safeguards per Section 2.5, plus terms of service. |
+| D7 | On-device transcription, server fallback. Each party reviews and accepts. Typed entries are first-class. |
+| D8 | Identity per Section 2.7. |
+| D9 | No token. Platform pays gas. Low-cost subscription. |
+| D10 | 18+. One-to-one or self only. Estate access by documented process. Report-based moderation. |
+| D11 | Visibility controlled by the parties; private by default; public by choice. |
+| D12 | Public accountability score with per-entry, per-party opt-in. |
+| D13 | Entry types including Calls. Types are configurable to allow pivots. |
+| D14 | Creation and sealing on mobile. Website for viewing, verifying, profiles, and account. |
+
+---
+
+## 13. Open decisions
+
+Taken in this order, one at a time.
+
+1. Binding entries: level of ID verification required, and whether locked deletion is mandatory or just the default.
+2. ID verification for non-binding entries: optional badge (recommended) or required.
+3. Visibility conflicts: more restrictive wins, and either party can lower but raising needs both (recommended).
+4. Disputed outcomes: excluded from score and shown as a disputed count (recommended), or another rule.
+5. Calls: free-text stakes only, no money handled (recommended).
+6. Export: can a party export their own copy of a non-binding entry without the other's approval (recommended yes, with notice).
+7. Capture device: record on one phone or both phones.
+8. Remote audio sessions: v1 or phase 2 (recommended phase 2; remote typed entries in v1).
+9. Abandoned drafts: delete after 7 days, or each party may keep a private copy.
+10. Chain: Base (recommended) or other.
+11. Launch geography: U.S. only (recommended).
+12. Product name.
+13. Repo: keep in this profile repo, or create a dedicated repo before coding (recommended dedicated).
+
+---
+
+## 14. Phases
+
+Phase 0 (now): design doc, open decisions, clickable prototype, legal review list.
+Phase 1 (MVP): accounts, connections, all five entry types, in-person record and typed capture, remote typed entries, review, sealing, binding election with ID verification and e-sign, batch anchoring (testnet then mainnet), verify, visibility, accountability score and Call record, ratings, check-ins, export, website (view, verify, profiles, public pages).
+Phase 2: remote audio sessions, feed expansion, second-chain anchoring, standalone static verifier, templates for binding entries.
+Phase 3: groups, on-chain escrow, attorney review marketplace.
+
+---
+
+## 15. Legal review list (all UNVERIFIED until checked against primary sources)
+
+- State all-party-consent recording statutes as applied to in-app consented entries.
+- Privacy laws (CCPA/CPRA, other state laws, GDPR if applicable); crypto-shredding as deletion; reconciling locked deletion with deletion rights.
+- Biometric privacy (BIPA and similar). No voiceprint features in v1.
+- ESIGN and UETA requirements for binding entries; consumer disclosure.
+- Enforceability limits for agreements between spouses and partners and other category warnings.
+- Gambling law and app store rules as applied to Calls with free-text stakes.
+- Defamation and consumer protection exposure from public scores and ratings.
+- Money transmission and securities: confirm platform-paid gas with no token avoids both.
 - App Store and Google Play rules for recording, crypto, and user-generated content.
-- Terms of use, privacy policy, records-request (subpoena) policy, and trust-and-safety policy.
+- Terms of service, privacy policy, records-request policy, trust and safety policy.
