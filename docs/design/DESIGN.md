@@ -43,7 +43,7 @@ Deletion setting is chosen at intake, per entry:
 - Option: "Neither of us can delete without the other." Deletion of either copy requires both parties.
 - Full destruction of the content happens when all parties delete, or when the last remaining party deletes.
 
-For binding entries the default may need to be the locked option, so neither party can destroy the record of a contract unilaterally. See open decisions.
+For binding entries the locked option is mandatory (D16), so neither party can destroy the record of a contract unilaterally.
 
 Privacy law still gives a user deletion rights over their own personal data. A locked setting has to be reconciled with that. Legal review item.
 
@@ -58,10 +58,10 @@ State all-party-consent statutes still go on the legal review list (UNVERIFIED).
 Every entry is non-binding by default. At intake, the parties can elect "Make this binding." Both must elect it. If either declines, the entry is non-binding.
 
 A binding entry adds:
-- Identity verification for both parties (see open decisions for the level).
+- Identity: the same phone and email verification as every account (decided D15). No government ID check is required. Accepted risk: a party can more easily claim "that wasn't me." The device signature, the consent log, and the voice on the audio carry the identity proof.
 - Electronic signature consent and intent-to-sign language at sealing. ESIGN Act and UETA requirements (UNVERIFIED; confirm).
 - Optional governing law field.
-- Stronger record defaults: locked deletion, export available to each party.
+- Locked deletion is mandatory (decided D16): neither party can delete without the other. Export available to each party.
 - A warning screen for categories that often carry formal requirements or limits: real estate, wills and estates, marital property and postnuptial terms, custody and support, and employment. A warning, not a block. Whether a given entry is enforceable is a question of state law we do not answer for the user.
 
 Non-binding entries carry the line "A personal record, not a legal contract" at sealing.
@@ -91,7 +91,7 @@ Audio is the canonical record. Transcription runs on the phone, with a server fa
 
 ### 2.7 Identity (decided)
 
-Proof of who comes from account verification, device-bound signing keys (passkeys / secure enclave), and the voice on the audio. Optional "ID verified" badge for non-binding use; required for binding entries.
+Proof of who comes from account verification (phone and email), device-bound signing keys (passkeys / secure enclave), and the voice on the audio. The same level applies to binding entries (D15).
 
 ### 2.8 Crypto exposure and business model (decided)
 
@@ -518,7 +518,7 @@ Text wireframes for structure. A clickable visual prototype is the next step.
 | Seal it                          |   | Seal it (binding)                |
 |----------------------------------|   |----------------------------------|
 | Who handles the holidays         |   | Sale of boat                     |
-| Alex and Sam, Nov 7, 2026        |   | Alex and Sam, ID verified        |
+| Alex and Sam, Nov 7, 2026        |   | Alex and Sam, Nov 7, 2026        |
 | Private . Each can delete        |   | Locked deletion                  |
 |                                  |   |                                  |
 | A personal record, not a legal   |   | You both chose to make this      |
@@ -613,11 +613,11 @@ Connections and requests; notifications; settings (devices, recovery, default vi
 
 ## 11. Binding entries: what v1 must include
 
-- ID verification for both parties.
+- Standard account verification (phone and email); no government ID check.
 - E-signature consumer disclosure and intent-to-sign at sealing (ESIGN / UETA, UNVERIFIED).
 - Governing law field (optional).
 - Category warnings (real estate, wills and estates, marital property and postnuptial terms, custody and support, employment).
-- Locked deletion default.
+- Locked deletion, mandatory.
 - Export of a complete record bundle by either party at any time.
 
 Later: templates and clause libraries, attorney review option, on-chain escrow.
@@ -642,6 +642,8 @@ Later: templates and clause libraries, attorney review option, on-chain escrow.
 | D12 | Public accountability score with per-entry, per-party opt-in. |
 | D13 | Entry types including Calls. Types are configurable to allow pivots. |
 | D14 | Creation and sealing on mobile. Website for viewing, verifying, profiles, and account. |
+| D15 | Binding entries use the same phone and email verification as all accounts. No government ID check. |
+| D16 | Binding entries: locked deletion is mandatory. |
 
 ---
 
@@ -649,8 +651,8 @@ Later: templates and clause libraries, attorney review option, on-chain escrow.
 
 Taken in this order, one at a time.
 
-1. Binding entries: level of ID verification required, and whether locked deletion is mandatory or just the default.
-2. ID verification for non-binding entries: optional badge (recommended) or required.
+1. (Decided: D15, D16.)
+2. Optional "ID verified" badge: offer it to members who want it, or skip ID checks entirely in v1.
 3. Visibility conflicts: more restrictive wins, and either party can lower but raising needs both (recommended).
 4. Disputed outcomes: excluded from score and shown as a disputed count (recommended), or another rule.
 5. Calls: free-text stakes only, no money handled (recommended).
@@ -668,7 +670,7 @@ Taken in this order, one at a time.
 ## 14. Phases
 
 Phase 0 (now): design doc, open decisions, clickable prototype, legal review list.
-Phase 1 (MVP): accounts, connections, all five entry types, in-person record and typed capture, remote typed entries, review, sealing, binding election with ID verification and e-sign, batch anchoring (testnet then mainnet), verify, visibility, accountability score and Call record, ratings, check-ins, export, website (view, verify, profiles, public pages).
+Phase 1 (MVP): accounts, connections, all five entry types, in-person record and typed capture, remote typed entries, review, sealing, binding election with e-sign, batch anchoring (testnet then mainnet), verify, visibility, accountability score and Call record, ratings, check-ins, export, website (view, verify, profiles, public pages).
 Phase 2: remote audio sessions, feed expansion, second-chain anchoring, standalone static verifier, templates for binding entries.
 Phase 3: groups, on-chain escrow, attorney review marketplace.
 
